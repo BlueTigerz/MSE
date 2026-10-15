@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#14171c">
 <meta name="description" content="Free Minecraft skin editor: paint in 3D, mirror, gradient brush and saved slots.">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -111,6 +112,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .bar{position:absolute;display:flex;gap:8px;align-items:center;z-index:2}
 .bar.tl{top:14px;left:14px;gap:10px}.bar.bl{bottom:16px;left:16px}.bar.br{bottom:16px;right:16px}.bar.bc{bottom:20px;left:50%;transform:translateX(-50%)}
 .logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#4a76bd;color:#fff;font:700 12px 'Silkscreen',monospace}
+.logo{background:none;overflow:hidden}
+.logo img{width:100%;height:100%;display:block;object-fit:contain}
+.logo .fbsvg{display:none}
+.logo.fb{background:#4a76bd}
+.logo.fb .fbsvg{display:block}
 .brandtxt{font-weight:800;font-size:14px;color:#dfe5ef;white-space:nowrap}
 .chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:8px 12px;border-radius:12px;font-weight:800;font-size:13px;transition:background .15s}
 .chip:hover{background:var(--panel2)}
@@ -158,8 +164,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 /* themes */
 .bar.tr{top:14px;right:14px}
 .themewrap{position:relative}
+.themewrap .mirrorbtn{width:100%}
 .tdot{width:14px;height:14px;border-radius:50%;background:var(--blue);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);flex:none}
-.pop{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.45);z-index:8}
+.pop{position:absolute;bottom:calc(100% + 8px);right:0;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.45);z-index:8}
 .opt{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--text);font-weight:800;font-size:13px;padding:9px 10px;border-radius:9px;text-align:left}
 .opt:hover{background:var(--panel2)}
 .opt[aria-checked="true"]{background:var(--blue-soft)}
@@ -200,16 +207,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <canvas id="tex" width="512" height="512" class="hidden"></canvas>
       <div class="nogl hidden" id="nogl">3D preview isn't available in this browser.<br>Use the Texture view to edit your skin.</div>
 
-      <div class="bar tl"><div class="logo" aria-hidden="true">MSE</div><span class="brandtxt">Minecraft Skin Editor</span></div>
+      <div class="bar tl"><div class="logo" aria-hidden="true"><img src="icons/icon-192.png" alt="" onerror="this.remove();this.parentNode.classList.add('fb')"><svg class="fbsvg" viewBox="0 0 17 5" width="26" height="7.65" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M0 0h1v1h-1zM4 0h1v1h-1zM0 1h1v1h-1zM1 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h1v1h-1zM0 3h1v1h-1zM4 3h1v1h-1zM0 4h1v1h-1zM4 4h1v1h-1zM7 0h1v1h-1zM8 0h1v1h-1zM9 0h1v1h-1zM10 0h1v1h-1zM6 1h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM10 3h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM12 0h1v1h-1zM13 0h1v1h-1zM14 0h1v1h-1zM15 0h1v1h-1zM16 0h1v1h-1zM12 1h1v1h-1zM12 2h1v1h-1zM13 2h1v1h-1zM14 2h1v1h-1zM15 2h1v1h-1zM12 3h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM15 4h1v1h-1zM16 4h1v1h-1z"/></svg></div><span class="brandtxt">Minecraft Skin Editor</span></div>
       <div class="bar bl">
         <button class="chip icon" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg class="i" data-icon="undo"></svg></button>
         <button class="chip icon" id="redo" title="Redo (Ctrl+Y)" aria-label="Redo"><svg class="i" data-icon="redo"></svg></button>
-      </div>
-      <div class="bar tr">
-        <div class="themewrap">
-          <button class="chip" id="themeBtn" aria-haspopup="true" aria-expanded="false" title="Change the accent color"><span class="tdot"></span>Themes</button>
-          <div class="pop hidden" id="themePop" role="menu" aria-label="Themes"></div>
-        </div>
       </div>
       <div class="bar br"><button class="chip" id="dlApp" title="Download the whole editor as one file. Double-click it to run MSE offline, no install needed."><svg class="i" data-icon="download"></svg>Download app</button></div>
       <div class="bar bc hint" id="hint">Drag the background to rotate · Right-drag to move</div>
@@ -243,6 +244,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
           <button data-m="outer" title="Draw on the outer layer (jackets, hats, hair)">Outer layer</button>
         </div>
         <button class="mirrorbtn" id="tMirror" aria-pressed="false" title="Paint the opposite side at the same time (M)"><svg class="i" data-icon="mirror"></svg>Mirror</button>
+        <div class="themewrap">
+          <button class="mirrorbtn" id="themeBtn" aria-haspopup="true" aria-expanded="false" title="Change the accent color"><span class="tdot"></span>Themes</button>
+          <div class="pop hidden" id="themePop" role="menu" aria-label="Themes"></div>
+        </div>
       </div>
     </div>
 
