@@ -244,6 +244,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
           <button data-m="outer" title="Draw on the outer layer (jackets, hats, hair)">Outer layer</button>
         </div>
         <button class="mirrorbtn" id="tMirror" aria-pressed="false" title="Paint the opposite side at the same time (M)"><svg class="i" data-icon="mirror"></svg>Mirror</button>
+        <button class="mirrorbtn" id="tLayers" aria-pressed="false" title="Show or hide the outer layer on the whole skin (view only)"><svg class="i" data-icon="layers"></svg>Layers</button>
         <div class="themewrap">
           <button class="mirrorbtn" id="themeBtn" aria-haspopup="true" aria-expanded="false" title="Change the accent color"><span class="tdot"></span>Themes</button>
           <div class="pop hidden" id="themePop" role="menu" aria-label="Themes"></div>
@@ -313,6 +314,7 @@ const ICON={
   rotl:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
   rotr:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
   grad:'<path d="M19 3 9.5 12.5"/><path d="M9.5 12.5c-2.8-.3-4.9 1.6-4.9 4.4 2.8 0 4.9-1.7 4.9-4.4z"/><circle cx="14.5" cy="19" r="1.4" fill="currentColor" opacity=".9"/><circle cx="18.2" cy="16" r="1.4" fill="currentColor" opacity=".6"/><circle cx="20.2" cy="11.7" r="1.2" fill="currentColor" opacity=".35"/>',
+  layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/>',
   mirror:'<path d="M12 3v18"/><path d="M8 7 3 17h5z"/><path d="M16 7l5 10h-5z"/>',
   folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
   close:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
@@ -368,7 +370,7 @@ const starterImg=new Image();starterImg.src=STARTER;
 function drawStarter(){paintG.clearRect(0,0,64,64);if(starterImg.complete&&starterImg.naturalWidth)paintG.drawImage(starterImg,0,0);}
 const RECENT_SEED=['#4a76bd','#f2c230','#111214','#ffffff','#9b4fc0','#f4a6c0','#2fc45a','#e0353d'];
 let S=Object.assign({},DEFAULT);
-const ui={view:'3d',anim:false,spin:false,guides:true,mode:'body',mirror:false};
+const ui={view:'3d',anim:false,spin:false,guides:true,mode:'body',mirror:false,layers:false};
 const paint={tool:'brush',size:1,color:'#4a76bd',recent:RECENT_SEED.slice()};
 const PARTKEYS=['head','body','rArm','lArm','rLeg','lLeg'];
 const vis={};PARTKEYS.forEach(k=>{vis[k]={on:true};});
@@ -401,11 +403,12 @@ function commit(){
 function restore(sn){S=Object.assign({},DEFAULT,JSON.parse(sn.s));paintG.putImageData(sn.p,0,0);refresh();save();}
 function undo(){if(ct)commit();if(hi>0){hi--;restore(hist[hi]);}}
 function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);}}
-function save(){try{localStorage.setItem('mse:v4',JSON.stringify({S:S,paint:paintC.toDataURL(),vis:vis}));}catch(e){}}
+function save(){try{localStorage.setItem('mse:v4',JSON.stringify({S:S,paint:paintC.toDataURL(),vis:vis,layers:ui.layers}));}catch(e){}}
 function load(cb){
   try{
     const raw=localStorage.getItem('mse:v4');if(!raw)return firstRun(cb);
     const d=JSON.parse(raw);if(d&&d.S)S=Object.assign({},DEFAULT,{model:d.S.model==='slim'?'slim':'classic',skin:d.S.skin||DEFAULT.skin});
+    if(d&&typeof d.layers==='boolean')ui.layers=d.layers;
     if(d&&d.vis)PARTKEYS.forEach(k=>{if(d.vis[k]){vis[k].on=d.vis[k].on!==false;}});
     if(d&&d.paint){const im=new Image();im.onload=()=>{paintG.drawImage(im,0,0);cb();};im.onerror=cb;im.src=d.paint;}else cb();
   }catch(e){cb();}
@@ -565,6 +568,7 @@ function syncAll(){
   $('#tWalk').setAttribute('aria-pressed',ui.anim);$('#tSpin').setAttribute('aria-pressed',ui.spin);
   $('#tGuides').setAttribute('aria-pressed',ui.guides);
   $('#tMirror').setAttribute('aria-pressed',ui.mirror);
+  $('#tLayers').setAttribute('aria-pressed',ui.layers);
 }
 
 /* ---------- painting ---------- */
@@ -866,7 +870,7 @@ function render3D(){
     const mm=partMat(k),mvp=M4.mul(PV,mm);
     const rot=new Float32Array([mm[0],mm[1],mm[2],mm[4],mm[5],mm[6],mm[8],mm[9],mm[10]]);
     drawMesh(meshes[k].base,0,mvp,rot);
-    drawMesh(meshes[k].over,1,mvp,rot);
+    if(ui.layers)drawMesh(meshes[k].over,1,mvp,rot);
   });
 }
 
@@ -899,6 +903,7 @@ function pick3D(e){
   let dx=cam.f[0]+cam.r[0]*nx*th*asp+cam.u[0]*ny*th,dy=cam.f[1]+cam.r[1]*nx*th*asp+cam.u[1]*ny*th,dz=cam.f[2]+cam.r[2]*nx*th*asp+cam.u[2]*ny*th;
   const l=Math.sqrt(dx*dx+dy*dy+dz*dz);dx/=l;dy/=l;dz/=l;
   const want=ui.mode==='outer'?'over':'base';
+  if(want==='over'&&!ui.layers)return null;
   let best=null;
   PART_ORDER.forEach(k=>{
     if(!vis[k].on||!meshes[k])return;
@@ -1006,7 +1011,7 @@ function importSkin(file){
     URL.revokeObjectURL(url);
     if(im.width!==64||im.height!==64){toast('Skins need to be 64×64 PNGs.');return;}
     paintG.clearRect(0,0,64,64);paintG.drawImage(im,0,0);
-    refresh();commit();toast('Skin loaded');
+    ui.layers=true;refresh();commit();toast('Skin loaded');
   };
   im.onerror=()=>{URL.revokeObjectURL(url);toast('That file couldn’t be read as an image.');};
   im.src=url;
@@ -1018,7 +1023,7 @@ function closeModal(){$('#modal').classList.add('hidden');}
 function doReset(){
   S=Object.assign({},DEFAULT);
   drawStarter();
-  PARTKEYS.forEach(k=>{vis[k].on=true;});
+  PARTKEYS.forEach(k=>{vis[k].on=true;});ui.layers=false;
   ui.mode='body';ui.mirror=false;ui.anim=false;ui.spin=false;
   paint.tool='brush';paint.size=1;paint.recent=RECENT_SEED.slice();
   yaw=0.5;pitch=0.08;zoomD=1;panX=0;panY=0;if(renderer)fitCamera();need=true;
@@ -1098,7 +1103,7 @@ function useSlot(i){
   im.onload=()=>{
     S=Object.assign({},DEFAULT,{model:sl.data.S.model==='slim'?'slim':'classic',skin:sl.data.S.skin||DEFAULT.skin});
     paintG.clearRect(0,0,64,64);paintG.drawImage(im,0,0);
-    refresh();commit();closeSkins();toast('Loaded “'+sl.name+'”');
+    ui.layers=true;refresh();commit();closeSkins();toast('Loaded “'+sl.name+'”');
   };
   im.onerror=()=>toast('That slot couldn’t be loaded');
   im.src=sl.data.paint;
@@ -1169,7 +1174,7 @@ function boot(){
   buildThemes();buildDia();buildTools();wheelInit();
   const ok=initGL();if(ok)bindGL();
 
-  document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{ui.mode=b.dataset.m;syncAll();});
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{ui.mode=b.dataset.m;if(ui.mode==='outer')ui.layers=true;need=true;syncAll();save();});
   $('#arm').onchange=e=>{S.model=e.target.value;refresh();commit();};
   $('#undo').onclick=undo;$('#redo').onclick=redo;
   $('#download').onclick=download;
@@ -1192,6 +1197,7 @@ function boot(){
   $('#v3d').onclick=()=>setView('3d');$('#vtex').onclick=()=>setView('tex');
   $('#tWalk').onclick=()=>{ui.anim=!ui.anim;need=true;syncAll();};
   $('#tSpin').onclick=()=>{ui.spin=!ui.spin;need=true;syncAll();};
+  $('#tLayers').onclick=()=>{ui.layers=!ui.layers;need=true;syncAll();save();};
   $('#tMirror').onclick=()=>{ui.mirror=!ui.mirror;texDirty=true;syncAll();};
   $('#tGuides').onclick=()=>{ui.guides=!ui.guides;texDirty=true;syncAll();};
 
