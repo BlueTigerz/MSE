@@ -4,11 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MSE – Minecraft Skin Editor</title>
-<meta name="theme-color" content="#14171c">
-<meta name="description" content="Free Minecraft skin editor: paint in 3D, mirror, gradient brush and saved slots.">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Silkscreen:wght@700&display=swap" rel="stylesheet">
@@ -284,11 +279,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 (function(){
 'use strict';
 /* clean copy of this page, taken before the script changes anything (used by Download app) */
-let installEvt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;setInstallLabel(true);});
-window.addEventListener('appinstalled',()=>{installEvt=null;const b=document.querySelector('#dlApp');if(b)b.classList.add('hidden');toast('MSE is installed. Look for it in your apps.');});
-function setInstallLabel(on){const b=document.querySelector('#dlApp');if(!b||!b.lastChild)return;b.lastChild.textContent=on?'Install app':'Download app';b.title=on?'Install MSE as an app on this device':'Download the whole editor as one file. Double-click it to run MSE offline, no install needed.';}
-if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
 const PRISTINE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
 
 /* ---------- helpers ---------- */
@@ -1168,12 +1158,7 @@ function boot(){
   $('#arm').onchange=e=>{S.model=e.target.value;refresh();commit();};
   $('#undo').onclick=undo;$('#redo').onclick=redo;
   $('#download').onclick=download;
-  $('#dlApp').onclick=()=>{
-    if(installEvt){const ev=installEvt;ev.prompt();ev.userChoice.finally(()=>{installEvt=null;setInstallLabel(false);});}
-    else downloadApp();
-  };
-  if(window.matchMedia&&matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#dlApp').classList.add('hidden');
-  if(installEvt)setInstallLabel(true);
+  $('#dlApp').onclick=downloadApp;
   if(location.protocol==='file:')$('#dlApp').classList.add('hidden');
   $('#import').onclick=()=>$('#file').click();
   $('#file').onchange=e=>{importSkin(e.target.files[0]);e.target.value='';};
