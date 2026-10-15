@@ -1,6 +1,6 @@
 /* MSE service worker: lets the app install and run offline.
    Bump VERSION whenever you upload a new index.html so visitors get the update. */
-const VERSION='mse-v1';
+const VERSION='mse-v2';
 const CORE=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'];
 
 self.addEventListener('install',e=>{
